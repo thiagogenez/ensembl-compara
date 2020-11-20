@@ -93,7 +93,7 @@ sub param_defaults {
 
             # only in 'ProteinTree' mode:
         'store_genes'                   => 1,   # whether the genes are also stored as members
-        'allow_ambiguity_codes'         => 0,
+        'allow_ambiguity_codes'         => 1,
         'store_related_pep_sequences'   => 0,
         'pseudo_stableID_prefix'        => undef,
         'force_unique_canonical'        => undef,
