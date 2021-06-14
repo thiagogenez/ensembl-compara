@@ -52,7 +52,7 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
         'division' => 'covid19',
-
+        'collection'      => $self->o('division'),
         # All the source databases
         'src_db_aliases' => {
             'master_db'     => 'compara_master',

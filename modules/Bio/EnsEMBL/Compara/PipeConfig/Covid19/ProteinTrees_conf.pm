@@ -47,6 +47,8 @@ sub default_options {
         %{$self->SUPER::default_options},   # inherit the generic ones
 
         'division'        => 'covid19',
+        'collection'      => $self->o('division'),
+        'species_set_name'      => $self->o('collection'),
         'prev_rel_db'     =>  undef,
 
         'clustering_mode' => 'blastp',
