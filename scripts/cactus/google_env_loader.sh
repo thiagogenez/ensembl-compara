@@ -49,13 +49,13 @@ check_gpu(){
 # ---- the following is for Cactus ----
  
 # load singularity module
-module load singularity/3.6.4
+module load singularity
  
 # Docker Image for "normal" Cactus (without-gpu binaries)
-export CACTUS_IMAGE="/apps/cactus/images/cactus.sif"
+export CACTUS_IMAGE="/apps/cactus/current/bin/cactus.sif"
  
 # Docker Image for Cactus with GPU binaries
-export CACTUS_GPU_IMAGE="/apps/cactus/images/cactus-gpu.sif"
+export CACTUS_GPU_IMAGE="/apps/cactus/current/bin/cactus-gpu.sif"
  
 # Create local folder to add some binaries
 LOCAL_SCRIPTS="$HOME/.local/scripts"
@@ -73,9 +73,9 @@ done
 export PATH=${LOCAL_SCRIPTS}:$PATH
 
 # mount /data
-[ -d /data ] && mount /data
+#[ -d /data ] && mount /data
  
 # if this is a GPU-enable node, forcing the bash to stop until GPUs are loaded
-if [[ -d /usr/local/cuda/ ]]; then
-  check_gpu
-fi
+#if [[ -d /usr/local/cuda/ ]]; then
+#  check_gpu
+#fi
