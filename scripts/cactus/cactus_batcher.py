@@ -160,9 +160,7 @@ def appendln_file(filename: str, line: str, mode: str = "a") -> None:
 
     if line:
         with open(filename, mode, encoding="utf-8") as file:
-            #if file.tell() > 0:
-            #    file.write("\n")
-            file.write(line.strip())
+            file.write(line.strip() + '\n')
 
 
 def make_or_replace_dir(path: str, force: bool = False) -> None:
@@ -462,9 +460,10 @@ def parse(
             # get parent and root node from the command line
             parsed_files["all"] = f"{root_dir}/{script_dirs['all']}/all-{task_type}.{ext}"
 
-        # write the line in the correct files
-        for filename in parsed_files.values():
-            appendln_file(filename=filename, line=line)
+        # write the line in the correct files and not write it down lines starting with ## Rounds
+        if not line.startswith('#'):
+            for filename in parsed_files.values():
+                appendln_file(filename=filename, line=line)
 
 
 ###################################################################
@@ -480,6 +479,7 @@ def get_slurm_submission(
     partition: str,
     gpus: int,
     cpus: int,
+    memory: int,
     command: str,
     dependencies: Sequence[str],
     script_filename: str,
@@ -519,6 +519,9 @@ def get_slurm_submission(
 
     if cpus is not None:
         sbatch.append(f"-c {cpus}")
+
+    if memory is not None:
+        sbatch.append(f"--mem {memory}")
 
     if dependencies is not None and len(dependencies) > 0:
         all_deps = ":$".join(["TASK_" + dep for dep in dependencies])
@@ -615,9 +618,8 @@ def slurmify(
                 # info for SLURM
                 info = cactus_job_command_name(line)
                 assert info is not None, "processed Cactus command info must not be empty"
-                assert info is not None, "processed Cactus command info must not be empty"
 
-                # set Cactus log file for Toil outputs
+                # set Cactus log file for Toil outputsgi
                 if info["command"] != "halAppendSubtree" and info["command"] != "hal2fasta":
                     line = f"{line} --logFile {root_dir}/{log_dir}/{info['command']}-{info['id']}.log"
 
@@ -646,8 +648,11 @@ def slurmify(
                     log_dir=f"{root_dir}/{log_dir}",
                     script_filename=individual_bashscript_filename,
                     partition=resources[info["command"]]["partition"],
-                    gpus=resources[info["command"]]["gpus"],
+                    gpus=resources[info["command"]]["gpus"]
+                        if 'gpus' in resources[info["command"]] else None,
                     cpus=resources[info["command"]]["cpus"],
+                    memory=resources[info["command"]]["memory"]
+                        if 'memory' in resources[info["command"]] else None,  # in MB
                     command=line.strip(),
                     dependencies=intra_dependencies,
                     singularity=True,
@@ -867,7 +872,8 @@ if __name__ == "__main__":
     # get rounds
     aln_dir = f"{data['jobs'][job]['directories']['root']}/{data['jobs'][job]['task_name']}"
     data["jobs"][job]["directories"]["rounds"] = sorted(
-        x for x in os.listdir(aln_dir) if os.path.isdir(os.path.join(aln_dir, x))
+        [x for x in os.listdir(aln_dir) if os.path.isdir(os.path.join(aln_dir, x))],
+        key=int
     )
 
     ###################################################################
@@ -905,7 +911,7 @@ if __name__ == "__main__":
     create_bash_script(filename=workflow_scripts)
 
     for job in data["task_order"]:
-        dir_: dict[str, Any] = data["jobs"][job]["directories"]
+        dir_ = data["jobs"][job]["directories"]
         for round_dir in dir_["rounds"]:
 
             if round_dir is None:
